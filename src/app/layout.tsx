@@ -15,6 +15,7 @@ import Link from 'next/link';
 import { LayoutDashboard } from 'lucide-react';
 import Header from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'EdgeSight Logistics',
@@ -41,36 +42,38 @@ export default function RootLayout({
           'min-h-screen bg-background font-body antialiased',
         )}
       >
-        <SidebarProvider>
-          <Sidebar
-            variant="inset"
-            collapsible="icon"
-            className="border-r-0 md:border-r"
-          >
-            <SidebarContent className="p-2">
-              <SidebarGroup>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      asChild
-                      tooltip="Dashboard"
-                      isActive
-                    >
-                      <Link href="/">
-                        <LayoutDashboard />
-                        <span>Dashboard</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                </SidebarMenu>
-              </SidebarGroup>
-            </SidebarContent>
-          </Sidebar>
-          <SidebarInset>
-            <Header />
-            <main className="flex-1 p-4 md:p-6">{children}</main>
-          </SidebarInset>
-        </SidebarProvider>
+        <FirebaseClientProvider>
+          <SidebarProvider>
+            <Sidebar
+              variant="inset"
+              collapsible="icon"
+              className="border-r-0 md:border-r"
+            >
+              <SidebarContent className="p-2">
+                <SidebarGroup>
+                  <SidebarMenu>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip="Dashboard"
+                        isActive
+                      >
+                        <Link href="/">
+                          <LayoutDashboard />
+                          <span>Dashboard</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  </SidebarMenu>
+                </SidebarGroup>
+              </SidebarContent>
+            </Sidebar>
+            <SidebarInset>
+              <Header />
+              <main className="flex-1 p-4 md:p-6">{children}</main>
+            </SidebarInset>
+          </SidebarProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

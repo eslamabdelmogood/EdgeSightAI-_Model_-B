@@ -13,9 +13,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { CriticalAlert, CriticalAlertStatus } from '@/lib/definitions';
 import { format, parseISO } from 'date-fns';
-import { confirmMaintenanceRequest } from '@/app/actions';
+import { confirmMaintenanceRequestClient } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
+import { useFirestore } from '@/firebase';
 
 function StatusBadge({ status }: { status: CriticalAlertStatus }) {
   const variant: 'default' | 'secondary' | 'destructive' | 'outline' =
@@ -38,20 +39,23 @@ function StatusBadge({ status }: { status: CriticalAlertStatus }) {
 function ConfirmButton({ alertId }: { alertId: string }) {
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+  const firestore = useFirestore();
 
-  const handleClick = () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!firestore) return;
     startTransition(async () => {
-      const result = await confirmMaintenanceRequest(alertId);
-      if (result.success) {
+      try {
+        await confirmMaintenanceRequestClient(firestore, alertId);
         toast({
           title: 'Processing Request',
           description: 'Maintenance order is being processed.',
         });
-      } else {
+      } catch (error: any) {
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: result.message,
+          description: error.message || 'An unexpected error occurred.',
         });
       }
     });
@@ -100,7 +104,7 @@ export default function AlertsTable({ alerts }: { alerts: CriticalAlert[] }) {
               <TableCell className="hidden lg:table-cell">
                 {alert.timestamp ? format(alert.timestamp.toDate(), 'PPp') : 'N/A'}
               </TableCell>
-              <TableCell onClick={(e) => e.stopPropagation()}>
+              <TableCell>
                 {alert.status === 'Pending Order' && (
                   <ConfirmButton alertId={alert.id} />
                 )}

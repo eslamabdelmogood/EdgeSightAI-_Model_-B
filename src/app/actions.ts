@@ -1,9 +1,9 @@
 'use server';
 
-import { adminDb } from '@/lib/firebase/admin';
-import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
+import { adminDb } from '@/lib/firebase/admin';
+import { FieldValue } from 'firebase-admin/firestore';
 
 const confirmMaintenanceRequestSchema = z.string().min(1, 'Alert ID is required.');
 
@@ -43,4 +43,21 @@ export async function confirmMaintenanceRequest(alertId: string) {
     }
     return { success: false, message: 'An unexpected error occurred.' };
   }
+}
+
+export async function confirmMaintenanceRequestClient(db: any, alertId: string) {
+  const { doc, updateDoc, serverTimestamp } = await import('firebase/firestore');
+  const alertRef = doc(db, 'Critical_Alerts', alertId);
+  await updateDoc(alertRef, {
+    status: 'Awaiting Confirmation',
+    maintenance_triggered: new Date().toISOString(),
+  });
+  
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  await updateDoc(alertRef, {
+    status: 'Order Confirmed',
+    order_timestamp: serverTimestamp(),
+  });
 }

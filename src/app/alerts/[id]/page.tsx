@@ -1,4 +1,4 @@
-import { adminDb } from '@/lib/firebase/admin';
+'use client';
 import { notFound } from 'next/navigation';
 import type { CriticalAlert } from '@/lib/definitions';
 import {
@@ -12,40 +12,49 @@ import { Badge } from '@/components/ui/badge';
 import { format, parseISO } from 'date-fns';
 import { HardHat, Bot, MapPin, Wrench, Clock, FileText } from 'lucide-react';
 import { suggestMaintenanceActions } from '@/ai/flows/suggest-maintenance-actions';
-import { Timestamp } from 'firebase-admin/firestore';
+import { useEffect, useMemo, useState } from 'react';
+import { useFirestore, useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import AlertDetailsLoading from './loading';
 
-async function getAlert(id: string) {
-  const alertDoc = await adminDb.collection('Critical_Alerts').doc(id).get();
-  if (!alertDoc.exists) {
-    return null;
-  }
-  const data = alertDoc.data() as Omit<CriticalAlert, 'id'>;
-  // Firestore Timestamps need to be converted for serialization
-  return {
-    id: alertDoc.id,
-    ...data,
-    timestamp: (data.timestamp as Timestamp).toDate().toISOString(),
-    order_timestamp: data.order_timestamp ? (data.order_timestamp as Timestamp).toDate().toISOString() : undefined,
-  };
-}
-
-export default async function AlertDetailsPage({
+export default function AlertDetailsPage({
   params,
 }: {
   params: { id: string };
 }) {
-  const alert = await getAlert(params.id);
+  const firestore = useFirestore();
+  const alertRef = useMemo(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'Critical_Alerts', params.id);
+  }, [firestore, params.id]);
+
+  const { data: alert, loading: alertLoading } = useDoc<CriticalAlert>(alertRef);
+  const [aiSuggestions, setAiSuggestions] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(true);
+
+  useEffect(() => {
+    if (alert) {
+      suggestMaintenanceActions({
+        asset_ID: alert.asset_ID,
+        part_PN: alert.part_PN,
+        location_coords: alert.location_coords,
+        estimated_failure_time: alert.estimated_failure_time,
+      }).then((suggestions) => {
+        setAiSuggestions(suggestions);
+        setAiLoading(false);
+      });
+    }
+  }, [alert]);
+
+  if (alertLoading) {
+    return <AlertDetailsLoading />;
+  }
 
   if (!alert) {
     notFound();
   }
 
-  const aiSuggestions = await suggestMaintenanceActions({
-    asset_ID: alert.asset_ID,
-    part_PN: alert.part_PN,
-    location_coords: alert.location_coords,
-    estimated_failure_time: alert.estimated_failure_time,
-  });
+  const isLoading = alertLoading || aiLoading;
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -82,7 +91,7 @@ export default async function AlertDetailsPage({
             <Clock className="mt-1 h-5 w-5 text-muted-foreground" />
             <div>
                 <p className="font-medium">Reported At</p>
-                <p className="text-muted-foreground">{format(parseISO(alert.timestamp), 'PPP, p')}</p>
+                <p className="text-muted-foreground">{alert.timestamp ? format(alert.timestamp.toDate(), 'PPP, p') : 'N/A'}</p>
             </div>
           </div>
           {alert.order_timestamp && (
@@ -90,7 +99,7 @@ export default async function AlertDetailsPage({
                 <Clock className="mt-1 h-5 w-5 text-muted-foreground" />
                 <div>
                     <p className="font-medium">Order Placed At</p>
-                    <p className="text-muted-foreground">{format(parseISO(alert.order_timestamp), 'PPP, p')}</p>
+                    <p className="text-muted-foreground">{alert.order_timestamp ? format(alert.order_timestamp.toDate(), 'PPP, p') : 'N/A'}</p>
                 </div>
             </div>
           )}
@@ -108,24 +117,30 @@ export default async function AlertDetailsPage({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <h4 className="mb-2 flex items-center gap-2 font-semibold">
-              <Wrench className="h-4 w-4" />
-              Suggested Actions
-            </h4>
-            <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
-              {aiSuggestions.suggestedActions.map((action, i) => (
-                <li key={i}>{action}</li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <h4 className="mb-2 flex items-center gap-2 font-semibold">
-              <FileText className="h-4 w-4" />
-              Reasoning
-            </h4>
-            <p className="text-sm text-muted-foreground">{aiSuggestions.reasoning}</p>
-          </div>
+          {aiLoading ? (
+            <div>Loading suggestions...</div>
+          ) : (
+            <>
+              <div>
+                <h4 className="mb-2 flex items-center gap-2 font-semibold">
+                  <Wrench className="h-4 w-4" />
+                  Suggested Actions
+                </h4>
+                <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+                  {aiSuggestions?.suggestedActions.map((action: string, i: number) => (
+                    <li key={i}>{action}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h4 className="mb-2 flex items-center gap-2 font-semibold">
+                  <FileText className="h-4 w-4" />
+                  Reasoning
+                </h4>
+                <p className="text-sm text-muted-foreground">{aiSuggestions?.reasoning}</p>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
