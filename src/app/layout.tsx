@@ -12,7 +12,7 @@ import {
   SidebarProvider,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, MessageSquare } from 'lucide-react';
 import Header from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
@@ -56,11 +56,21 @@ export default function RootLayout({
                       <SidebarMenuButton
                         asChild
                         tooltip="Dashboard"
-                        isActive
                       >
                         <Link href="/">
                           <LayoutDashboard />
                           <span>Dashboard</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        asChild
+                        tooltip="AI Assistant"
+                      >
+                        <Link href="/chat">
+                          <MessageSquare />
+                          <span>AI Assistant</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
