@@ -15,6 +15,7 @@ export type CriticalAlert = {
   estimated_failure_time: string;
   status: CriticalAlertStatus;
   timestamp: Timestamp;
+  category: 'Airplane' | 'Ship' | 'Factory' | 'Disaster';
   order_timestamp?: Timestamp;
   maintenance_triggered?: string;
 };

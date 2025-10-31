@@ -9,6 +9,7 @@ const oneM2MSchema = z.object({
   part_PN: z.string().min(1, 'part_PN is required'),
   location_coords: z.string().min(1, 'location_coords is required'),
   estimated_failure_time: z.string().datetime('estimated_failure_time must be a valid ISO date string'),
+  category: z.enum(['Airplane', 'Ship', 'Factory', 'Disaster']),
 });
 
 export async function POST(request: Request) {
@@ -21,7 +22,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: 'Invalid payload', errors: validation.error.errors }, { status: 400 });
     }
 
-    const { asset_ID, part_PN, location_coords, estimated_failure_time } = validation.data;
+    const { asset_ID, part_PN, location_coords, estimated_failure_time, category } = validation.data;
 
     // Create a new document in the 'Critical_Alerts' collection
     const newAlert = {
@@ -29,6 +30,7 @@ export async function POST(request: Request) {
       part_PN,
       location_coords,
       estimated_failure_time,
+      category,
       status: 'Pending Order',
       timestamp: FieldValue.serverTimestamp(),
     };

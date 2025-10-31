@@ -70,7 +70,7 @@ export default function RootLayout({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip="Airplane">
-                        <Link href="#">
+                        <Link href="/airplane">
                           <Plane />
                           <span>Airplane</span>
                         </Link>
@@ -78,7 +78,7 @@ export default function RootLayout({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip="Ship">
-                        <Link href="#">
+                        <Link href="/ship">
                           <Ship />
                           <span>Ship</span>
                         </Link>
@@ -86,7 +86,7 @@ export default function RootLayout({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip="Factory">
-                        <Link href="#">
+                        <Link href="/factory">
                           <Factory />
                           <span>Factory</span>
                         </Link>
@@ -94,7 +94,7 @@ export default function RootLayout({
                     </SidebarMenuItem>
                     <SidebarMenuItem>
                       <SidebarMenuButton asChild tooltip="Disaster">
-                        <Link href="#">
+                        <Link href="/disaster">
                           <AlertTriangle />
                           <span>Disaster</span>
                         </Link>
