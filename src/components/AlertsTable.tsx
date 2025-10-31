@@ -1,14 +1,6 @@
 'use client';
 
 import { useTransition } from 'react';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { CriticalAlert, CriticalAlertStatus } from '@/lib/definitions';
@@ -76,43 +68,33 @@ export default function AlertsTable({ alerts }: { alerts: CriticalAlert[] }) {
   };
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Asset ID</TableHead>
-            <TableHead>Part Number</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead className="hidden md:table-cell">Location</TableHead>
-            <TableHead className="hidden lg:table-cell">Est. Failure</TableHead>
-            <TableHead className="hidden lg:table-cell">Reported</TableHead>
-            <TableHead>Action</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {alerts.map((alert) => (
-            <TableRow key={alert.id} className="cursor-pointer" onClick={() => handleRowClick(alert.id)}>
-              <TableCell className="font-medium">{alert.asset_ID}</TableCell>
-              <TableCell>{alert.part_PN}</TableCell>
-              <TableCell>
-                <StatusBadge status={alert.status} />
-              </TableCell>
-              <TableCell className="hidden md:table-cell">{alert.location_coords}</TableCell>
-              <TableCell className="hidden lg:table-cell">
-                {format(parseISO(alert.estimated_failure_time), 'PPp')}
-              </TableCell>
-              <TableCell className="hidden lg:table-cell">
-                {alert.timestamp ? format(alert.timestamp.toDate(), 'PPp') : 'N/A'}
-              </TableCell>
-              <TableCell>
-                {alert.status === 'Pending Order' && (
-                  <ConfirmButton alertId={alert.id} />
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="border rounded-md">
+      <div className="grid grid-cols-[1fr,1fr,1fr,1fr,auto] items-center p-4 border-b font-medium text-muted-foreground">
+        <div>Asset ID</div>
+        <div>Part Number</div>
+        <div>Status</div>
+        <div>Location</div>
+        <div className="text-right">Action</div>
+      </div>
+      <div className="divide-y">
+        {alerts.map((alert) => (
+          <div 
+            key={alert.id} 
+            className="grid grid-cols-[1fr,1fr,1fr,1fr,auto] items-center p-4 cursor-pointer hover:bg-muted/50"
+            onClick={() => handleRowClick(alert.id)}
+          >
+            <div className="font-medium">{alert.asset_ID}</div>
+            <div>{alert.part_PN}</div>
+            <div><StatusBadge status={alert.status} /></div>
+            <div>{alert.location_coords}</div>
+            <div className="text-right">
+              {alert.status === 'Pending Order' && (
+                <ConfirmButton alertId={alert.id} />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
